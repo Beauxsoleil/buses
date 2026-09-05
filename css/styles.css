@@ -1,0 +1,341 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg: #181B1E;
+  --panel: #212528;
+  --panel-raised: #262B2F;
+  --line: #363C41;
+  --text: #ECE9E2;
+  --text-dim: #9AA3AC;
+  --text-faint: #6B7379;
+  --accent: #F2A900;
+  --accent-dim: #8A6A1F;
+
+  --ok: #4C9A2A;
+  --upcoming: #E8C547;
+  --due-soon: #E8792B;
+  --overdue: #D6392E;
+  --inactive: #5B6570;
+
+  --ok-bg: rgba(76, 154, 42, 0.14);
+  --upcoming-bg: rgba(232, 197, 71, 0.14);
+  --due-soon-bg: rgba(232, 121, 43, 0.16);
+  --overdue-bg: rgba(214, 57, 46, 0.18);
+  --inactive-bg: rgba(91, 101, 112, 0.14);
+
+  --font-display: 'Barlow Condensed', sans-serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+a { color: inherit; }
+
+/* ---------- Top bar ---------- */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  border-bottom: 2px solid var(--line);
+  background: var(--panel);
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.brand-mark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 28px;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+}
+
+.brand-sub {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.topbar-clock {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.nav {
+  display: flex;
+  gap: 2px;
+  padding: 0 28px;
+  background: var(--panel);
+  border-bottom: 2px solid var(--line);
+  overflow-x: auto;
+}
+
+.nav a {
+  display: block;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--text-dim);
+  border-bottom: 3px solid transparent;
+  white-space: nowrap;
+}
+
+.nav a.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+main {
+  flex: 1;
+  padding: 24px 28px 48px;
+  max-width: 1600px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ---------- Bracket panel (replaces the generic rounded card) ---------- */
+
+.panel {
+  position: relative;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 18px;
+}
+
+.panel::before, .panel::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--accent-dim);
+}
+
+.panel::before { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+.panel::after { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+
+.panel h3 {
+  margin: 0 0 12px;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* ---------- Summary strip ---------- */
+
+.summary-strip {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.summary-stat {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  padding: 14px 16px;
+}
+
+.summary-stat .num {
+  font-family: var(--font-display);
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.summary-stat .label {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.summary-stat.overdue { border-left-color: var(--overdue); }
+.summary-stat.overdue .num { color: var(--overdue); }
+.summary-stat.due-soon { border-left-color: var(--due-soon); }
+.summary-stat.due-soon .num { color: var(--due-soon); }
+
+/* ---------- Bus grid + cards ---------- */
+
+.bus-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.bus-card {
+  position: relative;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-top: 5px solid var(--inactive);
+  padding: 16px;
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--text);
+  display: block;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.bus-card:hover { background: var(--panel-raised); }
+
+.bus-card.status-ok { border-top-color: var(--ok); }
+.bus-card.status-upcoming { border-top-color: var(--upcoming); }
+.bus-card.status-due-soon { border-top-color: var(--due-soon); }
+.bus-card.status-overdue { border-top-color: var(--overdue); }
+.bus-card.status-inactive { border-top-color: var(--inactive); opacity: 0.6; }
+
+.bus-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+
+.bus-number {
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.bus-status-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  color: var(--text-dim);
+}
+
+.bus-nickname {
+  color: var(--text-dim);
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.bus-meta {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+}
+
+.bus-next-due {
+  font-size: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.bus-next-due .item-name { font-weight: 600; }
+
+.badge-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.count-badge {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 9px;
+}
+
+.count-badge.overdue { background: var(--overdue-bg); color: var(--overdue); }
+.count-badge.due-soon { background: var(--due-soon-bg); color: var(--due-soon); }
+
+/* ---------- Urgency dot ---------- */
+
+.dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+.dot.status-ok { background: var(--ok); }
+.dot.status-upcoming { background: var(--upcoming); }
+.dot.status-due-soon { background: var(--due-soon); }
+.dot.status-overdue { background: var(--overdue); }
+.dot.status-inactive { background: var(--inactive); }
+
+/* ---------- Task list rows (Today view etc.) ---------- */
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+  margin: 28px 0 10px;
+}
+
+.section-heading:first-child { margin-top: 0; }
+
+.task-row {
+  display: grid;
+  grid-template-columns: 90px 1fr 200px 160px;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--inactive);
+  margin-bottom: 8px;
+  background: var(--panel);
+}
+
+.task-row.overdue { border-left-color: var(--overdue); }
+.task-row.due-today { border-left-color: var(--due-soon); }
+.task-row.due-week { border-left-color: var(--upcoming); }
+
+.task-row .bus-num {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.task-row .item-name { font-weight: 600; }
+.task-row .item-cat { color: var(--text-dim); font-size: 12px; }
+.task-row .due-info { font-size: 13px; color: var(--text-dim); text-align: right; }
+.task-row .due-info strong { color: var(--text); display: block; font-size: 14px; }
+
+.empty-state {
+  padding: 20px;
+  color: var(--text-faint);
+  font-size: 14px;
+  border: 1px dashed var(--line);
+}
+
+/* ---------- Utility ---------- */
+
+.text-dim { color: var(--text-dim); }
+.mono-num { font-variant-numeric: tabular-nums; }
+
+@media (max-width: 900px) {
+  .summary-strip { grid-template-columns: repeat(2, 1fr); }
+  .task-row { grid-template-columns: 60px 1fr; grid-template-areas: "num name" "num due"; }
+  .task-row .due-info { text-align: left; }
+}
