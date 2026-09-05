@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Today — Bus Maintenance Tracker</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">FLEET</span>
+    <span class="brand-sub">Maintenance Tracker</span>
+  </div>
+  <div class="topbar-clock" id="clock"></div>
+</header>
+
+<nav class="nav">
+  <a href="index.html">Fleet Overview</a>
+  <a href="today.html">Today</a>
+  <a href="30day.html">30-Day</a>
+  <a href="60day.html">60-Day</a>
+  <a href="90day.html">90-Day</a>
+  <a href="compliance.html">Compliance</a>
+  <a href="costs.html">Costs</a>
+  <a href="history.html">History</a>
+  <a href="admin.html">Admin</a>
+</nav>
+
+<main id="content">
+  <div class="empty-state">Loading today's tasks\u2026</div>
+</main>
+
+<script type="module">
+import { fetchActiveSchedules, fetchDefects, computeUrgency, startClock, autoRefresh, highlightActiveNav, categoryLabel } from './js/dashboard.js';
+
+highlightActiveNav();
+startClock(document.getElementById('clock'));
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function taskRow(rowClass, s, u) {
+  return `
+    <div class="task-row ${rowClass}">
+      <div class="bus-num">${escapeHtml(s.bus?.bus_number || '\u2014')}</div>
+      <div>
+        <div class="item-name">${escapeHtml(s.item?.name || 'Maintenance item')}</div>
+        <div class="item-cat">${categoryLabel(s.item?.category)}</div>
+      </div>
+      <div class="text-dim">Last done: ${s.last_completed_date || 'never'}</div>
+      <div class="due-info"><strong>${u.label}</strong>${s.bus?.current_mileage != null ? s.bus.current_mileage.toLocaleString() + ' mi now' : ''}</div>
+    </div>`;
+}
+
+function defectRow(d) {
+  const sevClass = d.severity === 'SAFETY_CRITICAL' || d.severity === 'MAJOR' ? 'overdue' : 'due-today';
+  return `
+    <div class="task-row ${sevClass}">
+      <div class="bus-num">${escapeHtml(d.bus?.bus_number || '\u2014')}</div>
+      <div>
+        <div class="item-name">${escapeHtml(d.description)}</div>
+        <div class="item-cat">${categoryLabel(d.category)} \u00b7 ${d.severity.replace('_',' ')}</div>
+      </div>
+      <div class="text-dim">Reported by ${escapeHtml(d.reported_by || 'field')}</div>
+      <div class="due-info"><strong>${d.status.replace('_',' ')}</strong>${d.is_bus_safe_to_operate ? '' : 'NOT SAFE TO OPERATE'}</div>
+    </div>`;
+}
+
+async function render() {
+  const [schedules, defects] = await Promise.all([
+    fetchActiveSchedules(),
+    fetchDefects({ status: ['REPORTED', 'ACKNOWLEDGED', 'IN_PROGRESS'] }),
+  ]);
+
+  const withUrgency = schedules.map((s) => ({ s, u: computeUrgency(s) }));
+  const overdue = withUrgency.filter((x) => x.u.status === 'overdue').sort((a, b) => a.u.daysRemaining - b.u.daysRemaining || a.u.milesRemaining - b.u.milesRemaining);
+  const dueToday = withUrgency.filter((x) => x.u.daysRemaining === 0 && x.u.status !== 'overdue');
+  const dueWeek = withUrgency.filter((x) => x.u.status === 'due-soon' && x.u.daysRemaining !== 0);
+  const inProgress = defects.filter((d) => d.status === 'IN_PROGRESS');
+  const active = defects.filter((d) => d.status !== 'IN_PROGRESS');
+
+  const section = (emoji, title, rows, emptyMsg) => `
+    <div class="section-heading">${emoji} ${title}</div>
+    ${rows.length ? rows.join('') : `<div class="empty-state">${emptyMsg}</div>`}`;
+
+  document.getElementById('content').innerHTML =
+    section('\u{1F534}', 'Overdue', overdue.map((x) => taskRow('overdue', x.s, x.u)), 'Nothing overdue.') +
+    section('\u{1F7E0}', 'Due today', dueToday.map((x) => taskRow('due-today', x.s, x.u)), 'Nothing due today.') +
+    section('\u{1F7E1}', 'Due this week', dueWeek.map((x) => taskRow('due-week', x.s, x.u)), 'Nothing due this week.') +
+    section('\u{1F4CB}', 'Active defects', active.map(defectRow), 'No open defect reports.') +
+    section('\u{1F527}', 'In progress', inProgress.map(defectRow), 'Nothing currently being worked on.');
+}
+
+autoRefresh(() => render().catch((e) => {
+  document.getElementById('content').innerHTML = `<div class="empty-state">Couldn't load today's data: ${e.message}</div>`;
+}), 60);
+</script>
+
+</body>
+</html>
