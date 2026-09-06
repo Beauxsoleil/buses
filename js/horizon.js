@@ -56,11 +56,13 @@ function scheduleRow(entry) {
   const { s, u, days } = entry;
   const priority = s.item?.priority || 'MEDIUM';
   const isPlanningFocus = horizonDays === 90 && (s.item?.is_regulatory || ['HIGH', 'CRITICAL'].includes(priority));
+  const dateHeading = days === null ? 'Mileage' : formatDate(s.next_due_date, { month: 'short', day: 'numeric', year: undefined });
+  const dateSubheading = days === null ? 'No calendar date' : days === 0 ? 'Today' : `${days} days`;
   return `
     <a class="planning-row status-${u.status}${isPlanningFocus ? ' planning-focus' : ''}" href="bus.html?id=${encodeURIComponent(s.bus.id)}">
       <div class="planning-date">
-        <strong>${formatDate(s.next_due_date, { month: 'short', day: 'numeric', year: undefined })}</strong>
-        <span>${days === 0 ? 'Today' : `${days} days`}</span>
+        <strong>${dateHeading}</strong>
+        <span>${dateSubheading}</span>
       </div>
       <div class="planning-bus">BUS ${escapeHtml(s.bus.bus_number)}</div>
       <div class="planning-item">
@@ -96,7 +98,7 @@ async function render() {
     .filter((entry) => entry.u.status === 'overdue')
     .sort((a, b) => (a.days ?? 99999) - (b.days ?? 99999));
   const planned = entries
-    .filter((entry) => entry.days !== null && entry.days >= 0 && entry.days <= horizonDays)
+    .filter((entry) => entry.u.status !== 'overdue' && entry.days !== null && entry.days >= 0 && entry.days <= horizonDays)
     .sort((a, b) => a.days - b.days || String(a.s.bus.bus_number).localeCompare(String(b.s.bus.bus_number)));
   const mileageWatch = entries
     .filter((entry) => entry.days === null && ['due-soon', 'upcoming'].includes(entry.u.status))
