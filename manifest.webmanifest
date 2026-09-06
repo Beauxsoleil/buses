@@ -1,0 +1,13 @@
+{
+  "name": "Fleet Maintenance Tracker",
+  "short_name": "Fleet",
+  "description": "Bus fleet maintenance dashboard",
+  "start_url": "./index.html?kiosk",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#181B1E",
+  "theme_color": "#181B1E",
+  "icons": [
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
