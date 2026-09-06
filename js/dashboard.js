@@ -24,6 +24,18 @@ export async function fetchActiveSchedules() {
   return (data || []).filter((s) => s.bus && s.bus.status === 'ACTIVE');
 }
 
+// All enabled schedules for buses that are still part of the fleet. This is
+// intentionally broader than fetchActiveSchedules so compliance deadlines do
+// not disappear while a bus is temporarily out of service.
+export async function fetchFleetSchedules() {
+  const { data, error } = await supabase
+    .from('bus_maintenance_schedules')
+    .select('*, bus:buses(*), item:maintenance_items(*)')
+    .eq('is_active', true);
+  if (error) throw error;
+  return (data || []).filter((s) => s.bus && !['RETIRED', 'SOLD'].includes(s.bus.status));
+}
+
 export async function fetchDefects({ status } = {}) {
   let q = supabase.from('defect_reports').select('*, bus:buses(*)').order('reported_date', { ascending: false });
   if (status) q = q.in('status', status);
@@ -58,6 +70,7 @@ export function computeUrgency(schedule) {
   const bus = schedule.bus || {};
   const intervalDays = schedule.custom_interval_days ?? item.default_interval_days ?? null;
   const intervalMiles = schedule.custom_interval_miles ?? item.default_interval_miles ?? null;
+  const intervalEngineHours = schedule.custom_interval_engine_hours ?? item.default_interval_engine_hours ?? null;
 
   let daysRemaining = null;
   let pctDaysRemaining = null;
@@ -75,14 +88,23 @@ export function computeUrgency(schedule) {
     if (intervalMiles) pctMilesRemaining = milesRemaining / intervalMiles;
   }
 
-  if (daysRemaining === null && milesRemaining === null) {
-    return { status: 'unscheduled', daysRemaining, milesRemaining, label: 'Not yet scheduled' };
+  let engineHoursRemaining = null;
+  let pctEngineHoursRemaining = null;
+  if (schedule.next_due_engine_hours != null && bus.engine_hours != null) {
+    engineHoursRemaining = Number(schedule.next_due_engine_hours) - Number(bus.engine_hours);
+    if (intervalEngineHours) pctEngineHoursRemaining = engineHoursRemaining / intervalEngineHours;
   }
 
-  const pctCandidates = [pctDaysRemaining, pctMilesRemaining].filter((v) => v !== null);
+  if (daysRemaining === null && milesRemaining === null && engineHoursRemaining === null) {
+    return { status: 'unscheduled', daysRemaining, milesRemaining, engineHoursRemaining, label: 'Not yet scheduled' };
+  }
+
+  const pctCandidates = [pctDaysRemaining, pctMilesRemaining, pctEngineHoursRemaining].filter((v) => v !== null);
   const pctRemaining = pctCandidates.length ? Math.min(...pctCandidates) : null;
 
-  const isOverdue = (daysRemaining !== null && daysRemaining < 0) || (milesRemaining !== null && milesRemaining < 0);
+  const isOverdue = (daysRemaining !== null && daysRemaining < 0) ||
+    (milesRemaining !== null && milesRemaining < 0) ||
+    (engineHoursRemaining !== null && engineHoursRemaining < 0);
   const isOrange = (daysRemaining !== null && daysRemaining <= 7) || (pctRemaining !== null && pctRemaining < 0.25);
   const isYellow = (daysRemaining !== null && daysRemaining <= 30) || (pctRemaining !== null && pctRemaining < 0.75);
 
@@ -91,16 +113,26 @@ export function computeUrgency(schedule) {
   else if (isOrange) status = 'due-soon';
   else if (isYellow) status = 'upcoming';
 
-  return { status, daysRemaining, milesRemaining, label: formatDueLabel(status, daysRemaining, milesRemaining) };
+  return {
+    status,
+    daysRemaining,
+    milesRemaining,
+    engineHoursRemaining,
+    label: formatDueLabel(daysRemaining, milesRemaining, engineHoursRemaining),
+  };
 }
 
-function formatDueLabel(status, daysRemaining, milesRemaining) {
+function formatDueLabel(daysRemaining, milesRemaining, engineHoursRemaining) {
   const parts = [];
   if (daysRemaining !== null) {
     parts.push(daysRemaining < 0 ? `${Math.abs(daysRemaining)}d overdue` : daysRemaining === 0 ? 'due today' : `${daysRemaining}d left`);
   }
   if (milesRemaining !== null) {
     parts.push(milesRemaining < 0 ? `${Math.abs(milesRemaining).toLocaleString()} mi overdue` : `${milesRemaining.toLocaleString()} mi left`);
+  }
+  if (engineHoursRemaining !== null) {
+    const hours = Math.abs(engineHoursRemaining).toLocaleString(undefined, { maximumFractionDigits: 1 });
+    parts.push(engineHoursRemaining < 0 ? `${hours} hr overdue` : `${hours} hr left`);
   }
   return parts.join(' \u00b7 ') || '\u2014';
 }
@@ -144,6 +176,57 @@ export function highlightActiveNav() {
   document.querySelectorAll('.nav a').forEach((a) => {
     if (a.getAttribute('href') === path) a.classList.add('active');
   });
+  enableDashboardNavigation();
+}
+
+export function enableDashboardNavigation() {
+  const links = [...document.querySelectorAll('.nav a')]
+    .filter((a) => !['admin.html', 'bus.html'].includes(a.getAttribute('href')));
+  const current = links.findIndex((a) => a.classList.contains('active'));
+  if (current < 0) return;
+
+  const go = (offset) => {
+    const target = links[(current + offset + links.length) % links.length];
+    if (target) location.href = target.href;
+  };
+
+  document.addEventListener('keydown', (event) => {
+    if (event.altKey || event.ctrlKey || event.metaKey || /INPUT|SELECT|TEXTAREA/.test(event.target.tagName)) return;
+    if (event.key === 'ArrowRight') go(1);
+    if (event.key === 'ArrowLeft') go(-1);
+  });
+
+  let touchStartX = null;
+  document.addEventListener('touchstart', (event) => {
+    touchStartX = event.changedTouches[0]?.clientX ?? null;
+  }, { passive: true });
+  document.addEventListener('touchend', (event) => {
+    if (touchStartX === null) return;
+    const delta = (event.changedTouches[0]?.clientX ?? touchStartX) - touchStartX;
+    touchStartX = null;
+    if (Math.abs(delta) >= 80) go(delta < 0 ? 1 : -1);
+  }, { passive: true });
+}
+
+export function daysUntil(dateString) {
+  if (!dateString) return null;
+  const due = new Date(`${dateString}T00:00:00`);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((due - today) / 86400000);
+}
+
+export function formatDate(dateString, options = {}) {
+  if (!dateString) return '\u2014';
+  return new Date(`${dateString}T00:00:00`).toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric', ...options,
+  });
+}
+
+export function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
 }
 
 export function categoryLabel(cat) {

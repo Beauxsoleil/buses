@@ -334,8 +334,269 @@ main {
 .text-dim { color: var(--text-dim); }
 .mono-num { font-variant-numeric: tabular-nums; }
 
+/* ---------- Planning horizon + compliance views ---------- */
+
+.page-intro {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 24px;
+  margin-bottom: 22px;
+}
+
+.page-intro h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(38px, 5vw, 58px);
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+
+.page-intro p:not(.eyebrow) {
+  margin: 8px 0 0;
+  color: var(--text-dim);
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.keyboard-hint {
+  color: var(--text-faint);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.horizon-summary,
+.compliance-summary { margin-bottom: 18px; }
+
+.panel-title,
+.section-heading-row,
+.week-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.panel-title h2,
+.section-heading-row h2,
+.week-heading h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 26px;
+  line-height: 1.1;
+}
+
+.panel-title > span,
+.section-heading-row > span,
+.week-heading > span {
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+.workload-panel { margin-bottom: 28px; }
+
+.workload-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.workload-week {
+  padding: 12px;
+  background: var(--panel-raised);
+  border: 1px solid var(--line);
+}
+
+.workload-week > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.workload-week span { color: var(--text-dim); }
+
+.load-track {
+  height: 5px;
+  margin-top: 10px;
+  overflow: hidden;
+  background: var(--line);
+}
+
+.load-track span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.week-group,
+.compliance-section { margin-top: 28px; }
+
+.week-heading,
+.section-heading-row {
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.overdue-carryover .week-heading h2 { color: var(--overdue); }
+
+.planning-row {
+  display: grid;
+  grid-template-columns: 115px 105px minmax(220px, 1fr) 190px minmax(180px, .8fr);
+  gap: 14px;
+  align-items: center;
+  min-height: 74px;
+  margin-bottom: 7px;
+  padding: 11px 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--inactive);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.planning-row:hover,
+.compliance-row:hover { background: var(--panel-raised); }
+
+.planning-row.status-ok,
+.compliance-row.status-ok { border-left-color: var(--ok); }
+.planning-row.status-upcoming,
+.compliance-row.status-upcoming { border-left-color: var(--upcoming); }
+.planning-row.status-due-soon,
+.compliance-row.status-due-soon { border-left-color: var(--due-soon); }
+.planning-row.status-overdue,
+.compliance-row.status-overdue { border-left-color: var(--overdue); }
+.planning-row.status-unscheduled,
+.compliance-row.status-unscheduled { border-left-color: var(--inactive); }
+
+.planning-row.planning-focus { box-shadow: inset 0 0 0 1px var(--accent-dim); }
+
+.planning-date strong,
+.planning-date span,
+.planning-item strong,
+.planning-item span,
+.planning-due strong,
+.planning-due span,
+.compliance-row strong,
+.compliance-row span { display: block; }
+
+.planning-date strong,
+.planning-bus {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.planning-date span,
+.planning-item span,
+.planning-due span,
+.compliance-row span {
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.planning-item strong { font-size: 15px; }
+.planning-due { text-align: right; }
+.planning-due strong { font-size: 13px; }
+
+.planning-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag {
+  display: inline-block;
+  padding: 3px 7px;
+  border: 1px solid var(--line);
+  color: var(--text-dim);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .05em;
+}
+
+.tag.regulatory {
+  border-color: var(--accent-dim);
+  color: var(--accent);
+}
+
+.empty-state.large { min-height: 110px; display: grid; place-items: center; }
+.error-state { border-color: var(--overdue); color: var(--overdue); }
+
+.compliance-table-head,
+.compliance-row {
+  display: grid;
+  grid-template-columns: 130px minmax(220px, 1fr) minmax(210px, .8fr) 120px;
+  gap: 16px;
+  align-items: center;
+}
+
+.compliance-table-head {
+  padding: 5px 14px 8px 19px;
+  color: var(--text-faint);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.compliance-row {
+  min-height: 68px;
+  margin-bottom: 7px;
+  padding: 10px 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--inactive);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.compliance-state {
+  justify-self: end;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.compliance-row.status-overdue .compliance-state { color: var(--overdue); }
+.compliance-row.status-due-soon .compliance-state { color: var(--due-soon); }
+.compliance-row.status-upcoming .compliance-state { color: var(--upcoming); }
+.compliance-row.status-ok .compliance-state { color: var(--ok); }
+
 @media (max-width: 900px) {
   .summary-strip { grid-template-columns: repeat(2, 1fr); }
   .task-row { grid-template-columns: 60px 1fr; grid-template-areas: "num name" "num due"; }
   .task-row .due-info { text-align: left; }
+  .planning-row { grid-template-columns: 88px 1fr; }
+  .planning-flags { grid-column: 2; }
+  .planning-due { grid-column: 1 / -1; text-align: left; border-top: 1px solid var(--line); padding-top: 7px; }
+  .compliance-table-head { display: none; }
+  .compliance-row { grid-template-columns: 90px 1fr; }
+  .compliance-state { justify-self: start; grid-column: 2; }
+}
+
+@media (max-width: 600px) {
+  .topbar { padding: 12px 16px; }
+  .brand-sub { display: none; }
+  .topbar-clock { font-size: 16px; }
+  .nav { padding: 0 10px; }
+  .nav a { padding: 10px 11px; }
+  main { padding: 18px 14px 36px; }
+  .page-intro { align-items: start; }
+  .keyboard-hint { display: none; }
+  .summary-strip { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .summary-stat .num { font-size: 31px; }
+  .planning-row { grid-template-columns: 74px 1fr; gap: 9px; padding: 10px; }
+  .planning-flags { grid-column: 1 / -1; }
+  .compliance-row { grid-template-columns: 78px 1fr; padding: 10px; gap: 10px; }
 }

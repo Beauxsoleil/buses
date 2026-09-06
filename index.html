@@ -69,7 +69,7 @@ async function render() {
   });
 
   document.getElementById('summary-strip').outerHTML = `
-    <div class="summary-strip">
+    <div class="summary-strip" id="summary-strip">
       <div class="summary-stat"><div class="num mono-num">${buses.length}</div><div class="label">Total buses</div></div>
       <div class="summary-stat"><div class="num mono-num">${activeCount}</div><div class="label">Active</div></div>
       <div class="summary-stat"><div class="num mono-num">${oosCount}</div><div class="label">Out of service</div></div>
