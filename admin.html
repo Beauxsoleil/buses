@@ -3,24 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Sixty-day bus fleet maintenance and parts planning view.">
+<meta name="description" content="Fleet administration: add buses, record mileage, log maintenance and report defects. Sign-in required.">
 <meta name="theme-color" content="#181B1E">
 <meta name="color-scheme" content="dark">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://qshrulbcfchmrwffgbes.supabase.co wss://qshrulbcfchmrwffgbes.supabase.co; base-uri 'self'; form-action 'self'">
-<title>60-Day Plan — Bus Maintenance Tracker</title>
+<title>Admin — Bus Maintenance Tracker</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preload" href="fonts/barlow-condensed-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/styles.css">
 </head>
-<body data-horizon="60">
+<body>
 <div id="chrome"></div>
 <main id="content" tabindex="-1">
-  <div class="empty-state">Loading 60-day plan…</div>
+  <div class="empty-state">Checking sign-in…</div>
 </main>
 <noscript><p class="empty-state">This dashboard needs JavaScript to load fleet data.</p></noscript>
 <script src="vendor/supabase.js"></script>
-<script type="module" src="js/pages/horizon.js"></script>
+<script type="module" src="js/pages/admin.js"></script>
 </body>
 </html>

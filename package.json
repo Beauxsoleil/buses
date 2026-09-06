@@ -1,0 +1,24 @@
+{
+  "name": "fleet-maintenance-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Static bus fleet maintenance dashboard backed by Supabase.",
+  "type": "module",
+  "scripts": {
+    "start": "node scripts/serve.mjs",
+    "check": "node scripts/check.mjs",
+    "test": "node --test tests/unit/*.test.js",
+    "test:pages": "node tests/pages/run.mjs",
+    "test:sql": "node tests/sql/run.mjs",
+    "test:all": "npm run check && npm test && npm run test:pages && npm run test:sql"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "jsdom": "^24.1.3",
+    "embedded-postgres": "18.4.0-beta.17",
+    "pg": "^8.23.0"
+  }
+}

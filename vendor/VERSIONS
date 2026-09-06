@@ -1,0 +1,11 @@
+# Vendored browser libraries. Pinned so the dashboard never floats to an
+# unreviewed release and keeps working without a CDN. `npm run check`
+# verifies these hashes.
+#
+# file               package                     sha256 (base64)
+chart.umd.min.js     chart.js@4.5.1              SERKgtTty1vsDxll+qzd4Y2cF9swY9BCq62i9wXJ9Uo=
+supabase.js          @supabase/supabase-js@2.115.0  84flk1cwptlZmigZhqF26vzl6751FERiItIaoCnjHdU=
+#
+# To upgrade: download dist/chart.umd.min.js (chart.js) or dist/umd/supabase.js
+# (@supabase/supabase-js) from the npm tarball, replace the file, update the
+# hash above and re-run `npm run test:all`.

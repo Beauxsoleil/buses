@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Static checks, unit tests, page tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install test-only dependencies
+        run: npm install --no-save --no-audit --no-fund jsdom@24
+      - name: Static checks
+        run: npm run check
+      - name: Unit tests
+        run: npm test
+      - name: Page rendering tests
+        run: npm run test:pages
+
+  sql:
+    name: Database schema + RPC tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install embedded Postgres
+        run: npm install --no-save --no-audit --no-fund embedded-postgres@18.4.0-beta.17 pg@8
+      - name: Schema, RLS and RPC tests
+        run: npm run test:sql

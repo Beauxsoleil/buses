@@ -4,17 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Search, filter, and export the bus fleet maintenance history.">
+<meta name="theme-color" content="#181B1E">
+<meta name="color-scheme" content="dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://qshrulbcfchmrwffgbes.supabase.co wss://qshrulbcfchmrwffgbes.supabase.co; base-uri 'self'; form-action 'self'">
 <title>Maintenance History — Bus Maintenance Tracker</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="fonts/barlow-condensed-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-<header class="topbar"><div class="brand"><span class="brand-mark">FLEET</span><span class="brand-sub">Maintenance Tracker</span></div><div class="topbar-clock" id="clock"></div></header>
-<nav class="nav" aria-label="Dashboard views">
-  <a href="index.html">Fleet Overview</a><a href="today.html">Today</a><a href="30day.html">30-Day</a><a href="60day.html">60-Day</a><a href="90day.html">90-Day</a><a href="compliance.html">Compliance</a><a href="costs.html">Costs</a><a href="history.html">History</a><a href="admin.html">Admin</a>
-</nav>
-<main>
+<div id="chrome"></div>
+<main id="content" tabindex="-1">
   <div class="page-intro"><div><p class="eyebrow">Permanent record</p><h1>Maintenance History</h1><p>Search completed work, review costs, and export the current view.</p></div><div class="keyboard-hint">← → switch views</div></div>
-  <section class="history-controls" aria-label="Maintenance history filters">
+  <section class="history-controls" aria-label="Maintenance history filters" data-no-swipe>
     <label>Search<input id="history-search" type="search" placeholder="Item, vendor, work order…"></label>
     <label>Bus<select id="history-bus"><option value="">All buses</option></select></label>
     <label>Category<select id="history-category"><option value="">All categories</option></select></label>
@@ -23,10 +27,12 @@
     <button class="button secondary" id="clear-filters" type="button">Clear</button>
     <button class="button" id="export-csv" type="button">Export CSV</button>
   </section>
-  <div id="history-summary" class="history-summary"></div>
-  <section id="history-results"><div class="empty-state">Loading maintenance history…</div></section>
+  <div id="history-summary" class="history-summary" aria-live="polite"></div>
+  <section id="history-results" aria-live="polite"><div class="empty-state">Loading maintenance history…</div></section>
   <nav class="pagination" aria-label="Maintenance history pages"><button id="previous-page" class="button secondary" type="button">Previous</button><span id="page-status"></span><button id="next-page" class="button secondary" type="button">Next</button></nav>
 </main>
-<script type="module" src="js/history.js"></script>
+<noscript><p class="empty-state">This dashboard needs JavaScript to load fleet data.</p></noscript>
+<script src="vendor/supabase.js"></script>
+<script type="module" src="js/pages/history.js"></script>
 </body>
 </html>
