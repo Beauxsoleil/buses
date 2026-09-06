@@ -36,12 +36,59 @@ export async function fetchFleetSchedules() {
   return (data || []).filter((s) => s.bus && !['RETIRED', 'SOLD'].includes(s.bus.status));
 }
 
-export async function fetchDefects({ status } = {}) {
+export async function fetchDefects({ status, busId } = {}) {
   let q = supabase.from('defect_reports').select('*, bus:buses(*)').order('reported_date', { ascending: false });
   if (status) q = q.in('status', status);
+  if (busId) q = q.eq('bus_id', busId);
   const { data, error } = await q;
   if (error) throw error;
   return data;
+}
+
+export async function fetchMaintenanceLogs({ busId, limit = 1000 } = {}) {
+  let q = supabase
+    .from('maintenance_logs')
+    .select('*, bus:buses(*), item:maintenance_items(*)')
+    .order('date_performed', { ascending: false })
+    .order('created_at', { ascending: false })
+    .range(0, Math.max(0, limit - 1));
+  if (busId) q = q.eq('bus_id', busId);
+  const { data, error } = await q;
+  if (error) throw error;
+  return data || [];
+}
+
+export async function fetchMileageLogs({ busId } = {}) {
+  let q = supabase
+    .from('mileage_log')
+    .select('*, bus:buses(*)')
+    .order('date_recorded', { ascending: true })
+    .range(0, 4999);
+  if (busId) q = q.eq('bus_id', busId);
+  const { data, error } = await q;
+  if (error) throw error;
+  return data || [];
+}
+
+export async function fetchBus(busId) {
+  const { data, error } = await supabase
+    .from('buses')
+    .select('*')
+    .eq('id', busId)
+    .limit(1);
+  if (error) throw error;
+  return data?.[0] || null;
+}
+
+export async function fetchSchedulesForBus(busId) {
+  const { data, error } = await supabase
+    .from('bus_maintenance_schedules')
+    .select('*, bus:buses(*), item:maintenance_items(*)')
+    .eq('bus_id', busId)
+    .eq('is_active', true)
+    .order('next_due_date', { ascending: true });
+  if (error) throw error;
+  return data || [];
 }
 
 export async function fetchSettings() {
@@ -231,4 +278,8 @@ export function escapeHtml(value) {
 
 export function categoryLabel(cat) {
   return (cat || '').replace(/_/g, ' ');
+}
+
+export function formatMoney(value) {
+  return Number(value || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 }
