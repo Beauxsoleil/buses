@@ -3,130 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Live status of every bus in the fleet with overdue and upcoming maintenance.">
+<meta name="theme-color" content="#181B1E">
+<meta name="color-scheme" content="dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://qshrulbcfchmrwffgbes.supabase.co wss://qshrulbcfchmrwffgbes.supabase.co; base-uri 'self'; form-action 'self'">
 <title>Fleet Overview — Bus Maintenance Tracker</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="fonts/barlow-condensed-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-
-<header class="topbar">
-  <div class="brand">
-    <span class="brand-mark">FLEET</span>
-    <span class="brand-sub">Maintenance Tracker</span>
-  </div>
-  <div class="topbar-clock" id="clock"></div>
-</header>
-
-<nav class="nav">
-  <a href="index.html">Fleet Overview</a>
-  <a href="today.html">Today</a>
-  <a href="30day.html">30-Day</a>
-  <a href="60day.html">60-Day</a>
-  <a href="90day.html">90-Day</a>
-  <a href="compliance.html">Compliance</a>
-  <a href="costs.html">Costs</a>
-  <a href="history.html">History</a>
-  <a href="admin.html">Admin</a>
-</nav>
-
-<main>
-  <div class="summary-strip" id="summary-strip">
-    <div class="panel" style="display:contents"></div>
-  </div>
-
-  <div class="bus-grid" id="bus-grid">
-    <div class="empty-state">Loading fleet\u2026</div>
-  </div>
+<div id="chrome"></div>
+<main id="content" tabindex="-1">
+  <div class="summary-strip" id="summary-strip" aria-label="Fleet summary"></div>
+  <div class="bus-grid" id="bus-grid"><div class="empty-state">Loading fleet…</div></div>
 </main>
-
-<script type="module">
-import { fetchBuses, fetchActiveSchedules, computeUrgency, statusForBus, startClock, autoRefresh, highlightActiveNav } from './js/dashboard.js';
-
-highlightActiveNav();
-startClock(document.getElementById('clock'));
-
-function statusLabel(s) {
-  return { ok: 'On track', upcoming: 'Upcoming', 'due-soon': 'Due soon', overdue: 'Overdue', inactive: 'Inactive', unscheduled: 'Unscheduled' }[s] || s;
-}
-
-async function render() {
-  const [buses, schedules] = await Promise.all([fetchBuses(), fetchActiveSchedules()]);
-
-  const schedulesByBus = {};
-  schedules.forEach((s) => {
-    (schedulesByBus[s.bus_id] ||= []).push(s);
-  });
-
-  // Summary strip
-  let overdueCount = 0, dueSoonCount = 0, activeCount = 0, oosCount = 0;
-  buses.forEach((b) => {
-    if (b.status === 'ACTIVE') activeCount++;
-    if (b.status === 'OUT_OF_SERVICE') oosCount++;
-  });
-  schedules.forEach((s) => {
-    const u = computeUrgency(s).status;
-    if (u === 'overdue') overdueCount++;
-    if (u === 'due-soon') dueSoonCount++;
-  });
-
-  document.getElementById('summary-strip').outerHTML = `
-    <div class="summary-strip" id="summary-strip">
-      <div class="summary-stat"><div class="num mono-num">${buses.length}</div><div class="label">Total buses</div></div>
-      <div class="summary-stat"><div class="num mono-num">${activeCount}</div><div class="label">Active</div></div>
-      <div class="summary-stat"><div class="num mono-num">${oosCount}</div><div class="label">Out of service</div></div>
-      <div class="summary-stat overdue"><div class="num mono-num">${overdueCount}</div><div class="label">Items overdue</div></div>
-      <div class="summary-stat due-soon"><div class="num mono-num">${dueSoonCount}</div><div class="label">Due within 7 days</div></div>
-    </div>`;
-
-  // Bus grid
-  const grid = document.getElementById('bus-grid');
-  if (!buses.length) {
-    grid.innerHTML = `<div class="empty-state">No buses yet. Add your first bus from the Admin page.</div>`;
-    return;
-  }
-
-  grid.innerHTML = buses.map((bus) => {
-    const busSchedules = schedulesByBus[bus.id] || [];
-    const status = statusForBus(bus, busSchedules);
-    const urgencies = busSchedules.map((s) => ({ s, u: computeUrgency(s) }));
-    const overdueItems = urgencies.filter((x) => x.u.status === 'overdue');
-    const dueSoonItems = urgencies.filter((x) => x.u.status === 'due-soon');
-
-    const sortedByUrgency = [...urgencies].sort((a, b) => {
-      const rank = { overdue: 0, 'due-soon': 1, upcoming: 2, ok: 3, unscheduled: 4 };
-      return (rank[a.u.status] ?? 5) - (rank[b.u.status] ?? 5);
-    });
-    const next = sortedByUrgency[0];
-
-    return `
-      <a class="bus-card status-${status}" href="bus.html?id=${bus.id}">
-        <div class="bus-card-head">
-          <div class="bus-number">${escapeHtml(bus.bus_number)}</div>
-          <div class="bus-status-badge">${bus.status.replace('_', ' ')}</div>
-        </div>
-        ${bus.nickname ? `<div class="bus-nickname">"${escapeHtml(bus.nickname)}"</div>` : ''}
-        <div class="bus-meta">${[bus.year, bus.make, bus.model].filter(Boolean).join(' ')} \u00b7 ${bus.current_mileage?.toLocaleString() ?? '\u2014'} mi</div>
-        ${next ? `
-        <div class="bus-next-due">
-          <span class="dot status-${next.u.status}"></span>
-          <span class="item-name">${escapeHtml(next.s.item?.name || 'Maintenance')}</span>
-          <span class="text-dim"> \u2014 ${next.u.label}</span>
-        </div>` : `<div class="bus-next-due text-dim">No maintenance scheduled</div>`}
-        <div class="badge-row">
-          ${overdueItems.length ? `<span class="count-badge overdue">${overdueItems.length} overdue</span>` : ''}
-          ${dueSoonItems.length ? `<span class="count-badge due-soon">${dueSoonItems.length} due soon</span>` : ''}
-        </div>
-      </a>`;
-  }).join('');
-}
-
-function escapeHtml(str) {
-  return String(str).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
-
-autoRefresh(() => render().catch((e) => {
-  document.getElementById('bus-grid').innerHTML = `<div class="empty-state">Couldn't load fleet data: ${e.message}</div>`;
-}), 60);
-</script>
-
+<noscript><p class="empty-state">This dashboard needs JavaScript to load fleet data.</p></noscript>
+<script src="vendor/supabase.js"></script>
+<script type="module" src="js/pages/overview.js"></script>
 </body>
 </html>
