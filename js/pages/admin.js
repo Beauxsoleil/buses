@@ -716,6 +716,12 @@ async function renderEditForm(flash = '') {
       ${field({ name: 'model', label: 'Model', value: bus.model || '' })}
       ${field({ name: 'vin', label: 'VIN', value: bus.vin || '', attrs: 'maxlength="17" autocapitalize="characters" spellcheck="false"' })}
       ${field({ name: 'license_plate', label: 'License plate', value: bus.license_plate || '' })}
+      ${field({ name: 'vehicle_type', label: 'Vehicle type', value: bus.vehicle_type || '' })}
+      ${field({ name: 'fuel_type', label: 'Fuel type', value: bus.fuel_type || '' })}
+      ${field({ name: 'capacity', label: 'Capacity', type: 'number', value: bus.capacity ?? '', attrs: 'min="0"' })}
+      ${field({ name: 'engine_type', label: 'Engine', value: bus.engine_type || '' })}
+      ${field({ name: 'engine_serial', label: 'Engine serial', value: bus.engine_serial || '' })}
+      ${field({ name: 'transmission_serial', label: 'Transmission serial', value: bus.transmission_serial || '' })}
       ${field({ name: 'date_acquired', label: 'Date acquired', type: 'date', value: bus.date_acquired || '' })}
       ${COMPLIANCE_FIELDS.map(([f, label]) => field({ name: f, label, type: 'date', value: bus[f] || '' })).join('')}
       ${field({ name: 'notes', label: 'Notes', type: 'textarea', value: bus.notes || '', span: 'span-all' })}
@@ -725,8 +731,11 @@ async function renderEditForm(flash = '') {
       const errors = validateBusInput({ ...data, current_mileage: bus.current_mileage }, { existingNumbers: buses.filter((b) => b.id !== bus.id).map((b) => b.bus_number) });
       if (!showErrors(form, errors)) { setBusy(form, false); return; }
       const patch = {};
-      ['bus_number', 'nickname', 'status', 'year', 'make', 'model', 'vin', 'license_plate', 'date_acquired', 'notes', ...COMPLIANCE_FIELDS.map(([f]) => f)].forEach((key) => { patch[key] = nullIfEmpty(data[key]); });
+      ['bus_number', 'nickname', 'status', 'year', 'make', 'model', 'vin', 'license_plate', 'date_acquired', 'notes',
+        'vehicle_type', 'fuel_type', 'capacity', 'engine_type', 'engine_serial', 'transmission_serial',
+        ...COMPLIANCE_FIELDS.map(([f]) => f)].forEach((key) => { patch[key] = nullIfEmpty(data[key]); });
       patch.year = patch.year === null ? null : Number(patch.year);
+      patch.capacity = patch.capacity === null ? null : Number(patch.capacity);
       const updated = await updateBus(bus.id, patch);
       buses = buses.map((b) => (b.id === updated.id ? updated : b));
       renderEditForm(notice('success', `Bus ${escapeHtml(updated.bus_number)} saved. <a href="bus.html?id=${encodeURIComponent(updated.id)}">View bus \u2192</a>`));
