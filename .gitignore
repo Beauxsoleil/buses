@@ -3,3 +3,6 @@ package-lock.json
 .DS_Store
 *.log
 .pgdata/
+access-dump.json
+access-import/
+*-access-import.sql
