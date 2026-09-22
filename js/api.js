@@ -32,6 +32,10 @@ export async function fetchBus(busId) {
   return unwrap(await supabase.from('buses').select('*').eq('id', busId).maybeSingle());
 }
 
+export async function fetchVehicleDetails(busId) {
+  return unwrap(await supabase.from('vehicle_details').select('*').eq('bus_id', busId).maybeSingle());
+}
+
 export async function fetchMaintenanceItems({ activeOnly = true } = {}) {
   let q = supabase.from('maintenance_items').select('*').order('category').order('name');
   if (activeOnly) q = q.eq('is_active', true);
