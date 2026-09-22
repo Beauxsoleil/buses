@@ -244,6 +244,18 @@ main {
 .summary-stat.due-soon { border-left-color: var(--due-soon); }
 .summary-stat.due-soon .num { color: var(--due-soon); }
 
+.fleet-view-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 0 18px;
+}
+
+.fleet-view-bar > div { display: grid; gap: 3px; }
+.fleet-view-bar strong { font-family: var(--font-display); font-size: 20px; text-transform: uppercase; }
+.fleet-view-bar span { color: var(--text-dim); font-size: 12px; }
+
 /* ---------- Bus grid + cards ---------- */
 
 .bus-grid {
