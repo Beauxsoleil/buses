@@ -1,4 +1,4 @@
-import { fetchBus, fetchBuses, fetchSchedulesForBus, fetchMaintenanceLogs, fetchMileageLogs, fetchDefects, getSession } from '../api.js';
+import { fetchBus, fetchBuses, fetchVehicleDetails, fetchSchedulesForBus, fetchMaintenanceLogs, fetchMileageLogs, fetchDefects, getSession } from '../api.js';
 import { computeUrgency, statusForBus, statusLabel, daysUntil, deadlineStatus, deadlineLabel } from '../urgency.js';
 import { COMPLIANCE_FIELDS, DEFECT_STATUSES } from '../config.js';
 import { initPage, autoRefresh, escapeHtml, formatDate, formatTimestampDate, formatMoney, formatNumber, categoryLabel, titleCase, vehicleDescription, errorState, emptyState, pluralize } from '../ui.js';
@@ -49,8 +49,9 @@ async function render() {
     await renderPicker();
     return;
   }
-  const [bus, schedules, logs, mileage, defects, session] = await Promise.all([
+  const [bus, vehicleDetails, schedules, logs, mileage, defects, session] = await Promise.all([
     fetchBus(busId),
+    fetchVehicleDetails(busId).catch(() => null),
     fetchSchedulesForBus(busId),
     fetchMaintenanceLogs({ busId }),
     fetchMileageLogs({ busId }),
@@ -93,10 +94,18 @@ async function render() {
         <div class="detail-grid">
           ${detail('Year / Make / Model', vehicleDescription(bus))}
           ${detail('VIN', bus.vin)}${detail('License plate', bus.license_plate)}${detail('Current mileage', `${formatNumber(bus.current_mileage || 0)} mi`)}
+          ${detail('Vehicle type', bus.vehicle_type)}${detail('Fuel', bus.fuel_type)}${detail('Capacity', bus.capacity)}${detail('Mileage as of', formatDate(bus.mileage_as_of))}
+          ${detail('Engine', bus.engine_type)}${detail('Engine serial', bus.engine_serial)}${detail('Transmission serial', bus.transmission_serial)}
           ${detail('Engine hours', bus.engine_hours == null ? '\u2014' : `${formatNumber(bus.engine_hours)} hr`)}${detail('Acquired', formatDate(bus.date_acquired))}
           ${complianceFields.map(({ field, label, days }) => detail(label, bus[field] ? `${formatDate(bus[field])} \u00b7 ${deadlineLabel(days)}` : '\u2014', deadlineStatus(days))).join('')}
         </div>
         ${bus.notes ? `<div class="detail-notes"><span>Notes</span><p>${escapeHtml(bus.notes)}</p></div>` : ''}
+        ${vehicleDetails ? `<div class="detail-notes"><span>Equipment details</span><p>${[
+          vehicleDetails.specifications?.['Wiper Length'] && `Wipers: ${vehicleDetails.specifications['Wiper Length']}`,
+          vehicleDetails.specifications?.['Oil Capacity'] && `Oil capacity: ${vehicleDetails.specifications['Oil Capacity']}`,
+          vehicleDetails.tires?.['Tire Size'] && `Tires: ${vehicleDetails.tires['Tire Size']}`,
+          vehicleDetails.filters?.length && `${vehicleDetails.filters.length} filter specifications on file`,
+        ].filter(Boolean).map(escapeHtml).join(' \u00b7 ') || 'No equipment specifications on file.'}</p></div>` : ''}
       </section>
       <section class="panel detail-costs"><div class="panel-title"><h2>Cost summary</h2><span>Recorded history</span></div>
         <div class="detail-kpis"><div><strong>${formatMoney(yearCost)}</strong><span>This year</span></div><div><strong>${formatMoney(totalCost)}</strong><span>Lifetime logged</span></div><div><strong>${trackedMiles ? formatMoney(totalCost / trackedMiles) : '\u2014'}</strong><span>Cost / tracked mile (${formatNumber(trackedMiles)} mi)</span></div></div>
