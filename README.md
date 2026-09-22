@@ -56,13 +56,25 @@ safe to re-run.
 | --- | --- | --- |
 | 1 | `supabase/schema.sql` | Enums, tables (`buses`, `maintenance_items`, `bus_maintenance_schedules`, `maintenance_logs`, `mileage_log`, `defect_reports`, `app_settings`), triggers that keep `buses.current_mileage` in step with `mileage_log`, and public read-only RLS. |
 | 2 | `supabase/migrations/0001_admin_access.sql` | The `admin_users` allow-list, `is_admin()`, admin-only write policies, and the transactional RPCs the Admin page calls (`create_bus_with_schedules`, `assign_schedules`, `record_mileage`, `log_maintenance`). |
-| 3 | `supabase/seed-maintenance-items.sql` | The standard maintenance templates (oil, brakes, DOT inspection, …). Inserts only names that do not exist yet, so your edits to existing templates are kept. |
-| 4 | `supabase/grant-admin.sql` | Puts **your** account on the allow-list — see the next section. |
+| 3 | `supabase/migrations/0002_access_import.sql` | Adds fleet equipment fields, vehicle specifications, and the private legacy-source archive used by the GFSD Access import. |
+| 4 | `supabase/seed-maintenance-items.sql` | The standard maintenance templates (oil, brakes, DOT inspection, …). Inserts only names that do not exist yet, so your edits to existing templates are kept. |
+| 5 | `supabase/grant-admin.sql` | Puts **your** account on the allow-list — see the next section. |
 | — | `supabase/seed-history.sql` | *Optional.* Synthetic maintenance history for the five demonstration buses so the Costs and History pages have something to show. |
 
 `app_settings` holds the fleet timezone (`America/Denver`), the dashboard
 refresh/rotate intervals and the alert thresholds; edit those rows rather than
 the code.
+
+### GFSD Access import
+
+`scripts/prepare-access-import.mjs` converts a locally extracted Access JSON
+snapshot into idempotent, transactional SQL batches. The generated batches and
+the source snapshot stay out of Git. Vehicle records, odometers, equipment
+specifications, tires, filters, inspections, oil/filter services, repairs,
+parts, and active schedules are imported into the operational tables. Exact
+legacy rows are retained in `access_import_rows`, which is restricted to
+authorized administrators. Driver imports retain names and compliance
+expiration dates while omitting addresses, phone numbers, and dates of birth.
 
 ## Creating the admin account
 
