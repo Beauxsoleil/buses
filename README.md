@@ -59,7 +59,6 @@ safe to re-run.
 | 3 | `supabase/migrations/0002_access_import.sql` | Adds fleet equipment fields, vehicle specifications, and the private legacy-source archive used by the GFSD Access import. |
 | 4 | `supabase/seed-maintenance-items.sql` | The standard maintenance templates (oil, brakes, DOT inspection, …). Inserts only names that do not exist yet, so your edits to existing templates are kept. |
 | 5 | `supabase/grant-admin.sql` | Puts **your** account on the allow-list — see the next section. |
-| — | `supabase/seed-history.sql` | *Optional.* Synthetic maintenance history for the five demonstration buses so the Costs and History pages have something to show. |
 
 `app_settings` holds the fleet timezone (`America/Denver`), the dashboard
 refresh/rotate intervals and the alert thresholds; edit those rows rather than
