@@ -1,0 +1,52 @@
+name: Supabase Fleet Keepalive
+
+on:
+  schedule:
+    # Every six hours (UTC); scheduled runs can occasionally be delayed.
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-fleet-keepalive
+  cancel-in-progress: false
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check out fleet tracker
+        uses: actions/checkout@v4
+
+      - name: Make read-only Supabase database request
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const config = readFileSync('js/config.js', 'utf8');
+          const get = (name) => {
+            const match = config.match(new RegExp('export\\s+const\\s+' + name + '\\s*=\\s*[\'"]([^\'"]+)[\'"]'));
+            if (!match) throw new Error('Missing ' + name + ' in js/config.js');
+            return match[1];
+          };
+          const url = get('SUPABASE_URL');
+          const key = get('SUPABASE_ANON_KEY');
+          const endpoint = new URL('/rest/v1/buses?select=id&limit=1', url);
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 20000);
+          try {
+            const response = await fetch(endpoint, {
+              headers: { apikey: key, Authorization: 'Bearer ' + key },
+              signal: controller.signal
+            });
+            if (!response.ok) throw new Error('Supabase read failed: HTTP ' + response.status);
+            const data = await response.json();
+            if (!Array.isArray(data)) throw new Error('Unexpected Supabase response');
+            console.log('Supabase fleet read successful (HTTP ' + response.status + ').');
+          } finally {
+            clearTimeout(timeout);
+          }
+          NODE
